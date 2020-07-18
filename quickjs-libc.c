@@ -28,23 +28,36 @@
 #include <inttypes.h>
 #include <string.h>
 #include <assert.h>
-#include <unistd.h>
 #include <errno.h>
 #include <fcntl.h>
-#include <sys/time.h>
 #include <time.h>
 #include <signal.h>
 #include <limits.h>
 #include <sys/stat.h>
-#include <dirent.h>
+
 #if defined(_WIN32)
 #include <windows.h>
-#include <conio.h>
-#include <utime.h>
+#include <direct.h>
+#include <io.h>
+#include <sys/utime.h>
+#include "Win32Console.h"
+#include "windows_dirent.h"
+
+# ifndef PATH_MAX
+#  define PATH_MAX MAX_PATH
+# endif
+
+# define popen _popen
+# define pclose _pclose
+
 #else
+
+#include <unistd.h>
+#include <dirent.h>
 #include <dlfcn.h>
 #include <termios.h>
 #include <sys/ioctl.h>
+#include <sys/time.h>
 #include <sys/wait.h>
 
 #if defined(__APPLE__)
@@ -1026,6 +1039,12 @@ static JSValue js_std_file_puts(JSContext *ctx, JSValueConst this_val,
         str = JS_ToCStringLen(ctx, &len, argv[i]);
         if (!str)
             return JS_EXCEPTION;
+
+#if defined(PLATFORM_IS_WINDOWS)
+        if (f == stderr || f == stdout)
+	        Win32ConsoleOutput(f == stderr, str, len);
+        else
+#endif
         fwrite(str, 1, len, f);
         JS_FreeCString(ctx, str);
     }
@@ -1653,7 +1672,14 @@ static JSValue js_os_read_write(JSContext *ctx, JSValueConst this_val,
     if (magic)
         ret = js_get_errno(write(fd, buf + pos, len));
     else
+    {
+#if defined(PLATFORM_IS_WINDOWS)
+        if (fd == 0) // stdin
+            ret = js_get_errno(Win32ConsoleInput(buf + pos, len));
+        else
+#endif
         ret = js_get_errno(read(fd, buf + pos, len));
+    }
     return JS_NewInt64(ctx, ret);
 }
 
@@ -1943,7 +1969,33 @@ static JSValue js_os_signal(JSContext *ctx, JSValueConst this_val,
     return JS_UNDEFINED;
 }
 
-#if defined(__linux__) || defined(__APPLE__)
+#if defined(PLATFORM_IS_WINDOWS)
+static int64_t get_time_ms(void)
+{
+    return GetTickCount64();
+}
+
+// From: https://stackoverflow.com/a/26085827
+int gettimeofday(struct timeval* tp, struct timezone* tzp)
+{
+    static const uint64_t EPOCH = ((uint64_t)116444736000000000ULL);
+
+    SYSTEMTIME  system_time;
+    FILETIME    file_time;
+    uint64_t    time;
+
+    GetSystemTime(&system_time);
+    SystemTimeToFileTime(&system_time, &file_time);
+    time = ((uint64_t)file_time.dwLowDateTime);
+    time += ((uint64_t)file_time.dwHighDateTime) << 32;
+
+    tp->tv_sec = (long)((time - EPOCH) / 10000000L);
+    tp->tv_usec = (long)(system_time.wMilliseconds * 1000);
+
+    return 0;
+}
+
+#elif defined(__linux__) || defined(__APPLE__)
 static int64_t get_time_ms(void)
 {
     struct timespec ts;
@@ -3682,7 +3734,11 @@ static JSValue js_print(JSContext *ctx, JSValueConst this_val,
         str = JS_ToCStringLen(ctx, &len, argv[i]);
         if (!str)
             return JS_EXCEPTION;
+#if defined(PLATFORM_IS_WINDOWS)
+        Win32ConsoleOutput(FALSE, str, len);
+#else
         fwrite(str, 1, len, stdout);
+#endif
         JS_FreeCString(ctx, str);
     }
     putchar('\n');

@@ -24,6 +24,7 @@
 #ifndef LIBBF_H
 #define LIBBF_H
 
+#include "quickjs-def.h"
 #include <stddef.h>
 #include <stdint.h>
 

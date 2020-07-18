@@ -224,6 +224,23 @@ import * as os from "os";
         return len;
     }
 
+    function utf8_length(str) {
+        var len, c, i, str_len = str.length;
+        len = 0;
+        for(i = 0; i < str_len; i++) {
+            c = str.charCodeAt(i);
+            if (c < 0x80)
+                len += 1;
+            else if (c < 0x800)
+                len += 2;
+            else if (c < 0x10000)
+                len += 3;
+            else if (c < 0x200000)
+                len += 4;
+        }
+        return len;
+    }
+
     function is_trailing_surrogate(c)  {
         var d;
         if (typeof c !== "string")
@@ -302,7 +319,7 @@ import * as os from "os";
                 std.puts(cmd.substring(last_cursor_pos));
             } else {
                 /* goto the start of the line */
-                move_cursor(-ucs_length(last_cmd.substring(0, last_cursor_pos)));
+                move_cursor(-utf8_length(last_cmd.substring(0, last_cursor_pos)));
                 if (show_colors) {
                     var str = mexpr ? mexpr + '\n' + cmd : cmd;
                     var start = str.length - cmd.length;
@@ -312,7 +329,7 @@ import * as os from "os";
                     std.puts(cmd);
                 }
             }
-            term_cursor_x = (term_cursor_x + ucs_length(cmd)) % term_width;
+            term_cursor_x = (term_cursor_x + utf8_length(cmd)) % term_width;
             if (term_cursor_x == 0) {
                 /* show the cursor on the next line */
                 std.puts(" \x08");
@@ -323,9 +340,9 @@ import * as os from "os";
             last_cursor_pos = cmd.length;
         }
         if (cursor_pos > last_cursor_pos) {
-            move_cursor(ucs_length(cmd.substring(last_cursor_pos, cursor_pos)));
+            move_cursor(utf8_length(cmd.substring(last_cursor_pos, cursor_pos)));
         } else if (cursor_pos < last_cursor_pos) {
-            move_cursor(-ucs_length(cmd.substring(cursor_pos, last_cursor_pos)));
+            move_cursor(-utf8_length(cmd.substring(cursor_pos, last_cursor_pos)));
         }
         last_cursor_pos = cursor_pos;
         std.out.flush();
@@ -743,7 +760,7 @@ import * as os from "os";
         "\x09":     completion,             /* ^I - history-search-backward */
         "\x0a":     accept_line,            /* ^J - newline */
         "\x0b":     kill_line,              /* ^K - delete to end of line */
-        "\x0d":     accept_line,            /* ^M - enter */
+        //"\x0d":     accept_line,            /* ^M - enter */
         "\x0e":     next_history,           /* ^N - down */
         "\x10":     previous_history,       /* ^P - up */
         "\x11":     quoted_insert,          /* ^Q - quoted-insert */
@@ -796,7 +813,7 @@ import * as os from "os";
     function readline_print_prompt()
     {
         std.puts(prompt);
-        term_cursor_x = ucs_length(prompt) % term_width;
+        term_cursor_x = utf8_length(prompt) % term_width;
         last_cmd = "";
         last_cursor_pos = 0;
     }

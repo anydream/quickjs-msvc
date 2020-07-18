@@ -28,7 +28,6 @@
 #include <inttypes.h>
 #include <string.h>
 #include <assert.h>
-#include <unistd.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <time.h>
@@ -40,6 +39,10 @@
 
 #include "cutils.h"
 #include "quickjs-libc.h"
+
+#if !defined(PLATFORM_IS_WINDOWS)
+# include <unistd.h>
+#endif
 
 extern const uint8_t qjsc_repl[];
 extern const uint32_t qjsc_repl_size;
@@ -156,7 +159,7 @@ static inline size_t js_trace_malloc_usable_size(void *ptr)
 #endif
 }
 
-static void __attribute__((format(printf, 2, 3)))
+static void PLATFORM_PRINTF_LIKE(2, 3)
     js_trace_malloc_printf(JSMallocState *s, const char *fmt, ...)
 {
     va_list ap;
@@ -517,7 +520,8 @@ int main(int argc, char **argv)
                 goto fail;
         }
         if (interactive) {
-            js_std_eval_binary(ctx, qjsc_repl, qjsc_repl_size, 0);
+            //js_std_eval_binary(ctx, qjsc_repl, qjsc_repl_size, 0);
+        	eval_file(ctx, "repl.js", 1);
         }
         js_std_loop(ctx);
     }

@@ -25,17 +25,18 @@
 #ifndef CUTILS_H
 #define CUTILS_H
 
+#include "quickjs-defs.h"
 #include <stdlib.h>
 #include <inttypes.h>
 
 /* set if CPU is big endian */
 #undef WORDS_BIGENDIAN
 
-#define likely(x)       __builtin_expect(!!(x), 1)
-#define unlikely(x)     __builtin_expect(!!(x), 0)
-#define force_inline inline __attribute__((always_inline))
-#define no_inline __attribute__((noinline))
-#define __maybe_unused __attribute__((unused))
+#define likely(x)       PLATFORM_LIKELY(x)
+#define unlikely(x)     PLATFORM_UNLIKELY(x)
+#define force_inline    PLATFORM_FORCE_INLINE
+#define no_inline       PLATFORM_NO_INLINE
+#define __maybe_unused  PLATFORM_MAYBE_UNUSED
 
 #define xglue(x, y) x ## y
 #define glue(x, y) xglue(x, y)
@@ -114,27 +115,52 @@ static inline int64_t min_int64(int64_t a, int64_t b)
 /* WARNING: undefined if a = 0 */
 static inline int clz32(unsigned int a)
 {
+#if defined(PLATFORM_GNUC_LIKE)
     return __builtin_clz(a);
+#else
+    unsigned long idx;
+    _BitScanReverse(&idx, a);
+    return 31 ^ idx;
+#endif
 }
 
 /* WARNING: undefined if a = 0 */
 static inline int clz64(uint64_t a)
 {
+#if defined(PLATFORM_GNUC_LIKE)
     return __builtin_clzll(a);
+#else
+    unsigned long idx;
+    _BitScanReverse64(&idx, a);
+    return 63 ^ idx;
+#endif
 }
 
 /* WARNING: undefined if a = 0 */
 static inline int ctz32(unsigned int a)
 {
+#if defined(PLATFORM_GNUC_LIKE)
     return __builtin_ctz(a);
+#else
+    unsigned long idx;
+    _BitScanForward(&idx, a);
+    return 31 ^ idx;
+#endif
 }
 
 /* WARNING: undefined if a = 0 */
 static inline int ctz64(uint64_t a)
 {
+#if defined(PLATFORM_GNUC_LIKE)
     return __builtin_ctzll(a);
+#else
+    unsigned long idx;
+    _BitScanForward64(&idx, a);
+    return 63 ^ idx;
+#endif
 }
 
+#if defined(PLATFORM_GNUC_LIKE)
 struct __attribute__((packed)) packed_u64 {
     uint64_t v;
 };
@@ -146,6 +172,21 @@ struct __attribute__((packed)) packed_u32 {
 struct __attribute__((packed)) packed_u16 {
     uint16_t v;
 };
+#else
+#pragma pack(push, 1)
+struct packed_u64 {
+    uint64_t v;
+};
+
+struct packed_u32 {
+    uint32_t v;
+};
+
+struct packed_u16 {
+    uint16_t v;
+};
+#pragma pack(pop)
+#endif
 
 static inline uint64_t get_u64(const uint8_t *tab)
 {
@@ -262,8 +303,7 @@ static inline int dbuf_put_u64(DynBuf *s, uint64_t val)
 {
     return dbuf_put(s, (uint8_t *)&val, 8);
 }
-int __attribute__((format(printf, 2, 3))) dbuf_printf(DynBuf *s,
-                                                      const char *fmt, ...);
+int PLATFORM_PRINTF_LIKE(2, 3) dbuf_printf(DynBuf *s, const char *fmt, ...);
 void dbuf_free(DynBuf *s);
 static inline BOOL dbuf_error(DynBuf *s) {
     return s->error;
