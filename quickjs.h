@@ -1030,6 +1030,7 @@ int JS_AddModuleExportList(JSContext *ctx, JSModuleDef *m,
 /* can only be called after the module is instantiated */
 int JS_SetModuleExport(JSContext *ctx, JSModuleDef *m, const char *export_name,
                        JSValue val);
+JSValue JS_GetModuleExport(JSContext *ctx, JSModuleDef *m, const char *export_name);
 int JS_SetModuleExportList(JSContext *ctx, JSModuleDef *m,
                            const JSCFunctionListEntry *tab, int len);
 
