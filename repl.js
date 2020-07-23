@@ -161,7 +161,7 @@ import * as os from "os";
         os.signal(os.SIGINT, sigint_handler);
 
         /* install a handler to read stdin */
-        term_read_buf = new Uint8Array(64);
+        term_read_buf = new Uint8Array(512);
         os.setReadHandler(term_fd, term_read_handler);
     }
 

@@ -143,7 +143,7 @@ typedef struct JSThreadState {
 } JSThreadState;
 
 static uint64_t os_pending_signals;
-static int (*os_poll_func)(JSContext *ctx);
+static int (*os_poll_func)(JSContext *ctx, int poll_delay);
 
 static void js_std_dbuf_init(JSContext *ctx, DynBuf *s)
 {
@@ -2109,7 +2109,7 @@ static void call_handler(JSContext *ctx, JSValueConst func)
 
 #if defined(_WIN32)
 
-static int js_os_poll(JSContext *ctx)
+static int js_os_poll(JSContext *ctx, int poll_delay)
 {
     JSRuntime *rt = JS_GetRuntime(ctx);
     JSThreadState *ts = JS_GetRuntimeOpaque(rt);
@@ -2126,7 +2126,7 @@ static int js_os_poll(JSContext *ctx)
     /* XXX: only timers and basic console input are supported */
     if (!list_empty(&ts->os_timers)) {
         cur_time = get_time_ms();
-        min_delay = 10000;
+        min_delay = poll_delay;
         list_for_each(el, &ts->os_timers) {
             JSOSTimer *th = list_entry(el, JSOSTimer, link);
             delay = th->timeout - cur_time;
@@ -2261,7 +2261,7 @@ static int handle_posted_message(JSRuntime *rt, JSContext *ctx,
 }
 #endif
 
-static int js_os_poll(JSContext *ctx)
+static int js_os_poll(JSContext *ctx, int poll_delay)
 {
     JSRuntime *rt = JS_GetRuntime(ctx);
     JSThreadState *ts = JS_GetRuntimeOpaque(rt);
@@ -2295,7 +2295,7 @@ static int js_os_poll(JSContext *ctx)
     
     if (!list_empty(&ts->os_timers)) {
         cur_time = get_time_ms();
-        min_delay = 10000;
+        min_delay = poll_delay;
         list_for_each(el, &ts->os_timers) {
             JSOSTimer *th = list_entry(el, JSOSTimer, link);
             delay = th->timeout - cur_time;
@@ -3903,9 +3903,30 @@ void js_std_loop(JSContext *ctx)
             }
         }
 
-        if (!os_poll_func || os_poll_func(ctx))
+        if (!os_poll_func || os_poll_func(ctx, 10000))
             break;
     }
+}
+
+int js_std_loop_nowait(JSContext *ctx)
+{
+    JSContext *ctx1;
+    int err;
+
+    /* execute the pending jobs */
+    for(;;) {
+        err = JS_ExecutePendingJob(JS_GetRuntime(ctx), &ctx1);
+        if (err <= 0) {
+            if (err < 0) {
+                js_std_dump_error(ctx1);
+            }
+            break;
+        }
+    }
+
+    if (!os_poll_func || os_poll_func(ctx, 0))
+        return -1;
+    return 0;
 }
 
 void js_std_eval_binary(JSContext *ctx, const uint8_t *buf, size_t buf_len,
