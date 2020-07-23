@@ -664,9 +664,10 @@ static void EscapeOutput(HANDLE h, const char *str, uint32_t sz)
 	}
 }
 
-void Win32ConsoleOutput(int isErr, const char *str, uint32_t sz)
+int Win32ConsoleOutput(int isErr, const char *str, uint32_t sz)
 {
 	EscapeOutput(GetStdHandle(isErr ? STD_ERROR_HANDLE : STD_OUTPUT_HANDLE), str, sz);
+	return sz;
 }
 
 int Win32ConsoleInput(char *str, uint32_t sz)

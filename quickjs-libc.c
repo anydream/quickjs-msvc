@@ -357,6 +357,11 @@ static JSValue js_printf_internal(JSContext *ctx,
         res = JS_ThrowOutOfMemory(ctx);
     } else {
         if (fp) {
+#if defined(PLATFORM_IS_WINDOWS)
+            if (fp == stderr || fp == stdout)
+                len = Win32ConsoleOutput(fp == stderr, (char*)dbuf.buf, dbuf.size);
+            else
+#endif
             len = fwrite(dbuf.buf, 1, dbuf.size, fp);
             res = JS_NewInt32(ctx, len);
         } else {
@@ -1184,8 +1189,18 @@ static JSValue js_std_file_read_write(JSContext *ctx, JSValueConst this_val,
     if (pos + len > size)
         return JS_ThrowRangeError(ctx, "read/write array buffer overflow");
     if (magic)
+#if defined(PLATFORM_IS_WINDOWS)
+        if (f == stderr || f == stdout)
+            ret = Win32ConsoleOutput(f == stderr, (char*)buf + pos, len);
+        else
+#endif
         ret = fwrite(buf + pos, 1, len, f);
     else
+#if defined(PLATFORM_IS_WINDOWS)
+        if (f == stdin)
+            ret = Win32ConsoleInput((char*)buf + pos, len);
+        else
+#endif
         ret = fread(buf + pos, 1, len, f);
     return JS_NewInt64(ctx, ret);
 }
