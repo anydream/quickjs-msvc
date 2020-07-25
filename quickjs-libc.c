@@ -1047,7 +1047,7 @@ static JSValue js_std_file_puts(JSContext *ctx, JSValueConst this_val,
 
 #if defined(PLATFORM_IS_WINDOWS)
         if (f == stderr || f == stdout)
-	        Win32ConsoleOutput(f == stderr, str, len);
+            Win32ConsoleOutput(f == stderr, str, len);
         else
 #endif
         fwrite(str, 1, len, f);
@@ -1991,13 +1991,13 @@ static int64_t get_time_ms(void)
 }
 
 // From: https://stackoverflow.com/a/26085827
-int gettimeofday(struct timeval* tp, struct timezone* tzp)
+int gettimeofday(struct timeval *tp, void *tzp)
 {
     static const uint64_t EPOCH = ((uint64_t)116444736000000000ULL);
 
-    SYSTEMTIME  system_time;
-    FILETIME    file_time;
-    uint64_t    time;
+    SYSTEMTIME system_time;
+    FILETIME file_time;
+    uint64_t time;
 
     GetSystemTime(&system_time);
     SystemTimeToFileTime(&system_time, &file_time);

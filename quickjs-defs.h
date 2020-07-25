@@ -110,7 +110,7 @@
 
 typedef intptr_t ssize_t;
 
-int gettimeofday(struct timeval *tp, struct timezone *tzp);
+int gettimeofday(struct timeval *tp, void *tzp);
 
 #endif
 
