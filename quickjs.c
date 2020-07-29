@@ -37669,6 +37669,13 @@ static JSValue js_function_bind(JSContext *ctx, JSValueConst this_val,
     return JS_EXCEPTION;
 }
 
+JSValue JS_FunctionBind(
+    JSContext *ctx, JSValueConst this_val,
+    int argc, JSValueConst *argv)
+{
+	return js_function_bind(ctx, this_val, argc, argv);
+}
+
 static JSValue js_function_toString(JSContext *ctx, JSValueConst this_val,
                                     int argc, JSValueConst *argv)
 {
