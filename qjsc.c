@@ -176,6 +176,17 @@ static void dump_hex(FILE *f, const uint8_t *buf, size_t len)
         fprintf(f, "\n");
 }
 
+static void dump_bin(const char *path, const uint8_t *buf, size_t len)
+{
+	FILE *fp;
+	char tmp[512];
+	strcpy(tmp, path);
+	strcat(tmp, ".bin");
+	fp = fopen(tmp, "wb");
+	fwrite(buf, len, 1, fp);
+	fclose(fp);
+}
+
 static void output_object_code(JSContext *ctx,
                                FILE *fo, JSValueConst obj, const char *c_name,
                                BOOL load_only)
@@ -199,6 +210,7 @@ static void output_object_code(JSContext *ctx,
     fprintf(fo, "const uint8_t %s[%u] = {\n",
             c_name, (unsigned int)out_buf_len);
     dump_hex(fo, out_buf, out_buf_len);
+    dump_bin(c_name, out_buf, out_buf_len);
     fprintf(fo, "};\n\n");
 
     js_free(ctx, out_buf);
