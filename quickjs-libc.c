@@ -1985,9 +1985,11 @@ static JSValue js_os_signal(JSContext *ctx, JSValueConst this_val,
 }
 
 #if defined(PLATFORM_IS_WINDOWS)
+uint64_t timeGetTime64();
+
 static int64_t get_time_ms(void)
 {
-    return GetTickCount64();
+    return timeGetTime64();
 }
 
 // From: https://stackoverflow.com/a/26085827
