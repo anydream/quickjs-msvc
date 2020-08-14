@@ -2064,6 +2064,12 @@ static void js_os_timer_mark(JSRuntime *rt, JSValueConst val,
     }
 }
 
+static JSValue js_os_getTick(JSContext *ctx, JSValueConst this_val,
+                             int argc, JSValueConst *argv)
+{
+    return JS_NewInt64(ctx, get_time_ms());
+}
+
 static JSValue js_os_setTimeout(JSContext *ctx, JSValueConst this_val,
                                 int argc, JSValueConst *argv)
 {
@@ -2195,7 +2201,8 @@ static int js_os_poll(JSContext *ctx, int poll_delay)
             }
         }
     } else {
-        Sleep(min_delay);
+        min_delay -= 2;
+        Sleep(min_delay > 0 ? min_delay : 0);
     }
     return 0;
 }
@@ -3645,6 +3652,7 @@ static const JSCFunctionListEntry js_os_funcs[] = {
     OS_FLAG(SIGTTIN),
     OS_FLAG(SIGTTOU),
 #endif
+    JS_CFUNC_DEF("getTick", 0, js_os_getTick ),
     JS_CFUNC_DEF("setTimeout", 2, js_os_setTimeout ),
     JS_CFUNC_DEF("clearTimeout", 1, js_os_clearTimeout ),
     JS_PROP_STRING_DEF("platform", OS_PLATFORM, 0 ),
