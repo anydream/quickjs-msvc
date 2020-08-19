@@ -41856,7 +41856,9 @@ static JSValue js___date_clock(JSContext *ctx, JSValueConst this_val,
    between local time and UTC time 'd' in minutes */
 static int getTimezoneOffset(int64_t time) {
 #if defined(_WIN32)
-    /* XXX: TODO */
+    TIME_ZONE_INFORMATION tzi;
+    if (!GetTimeZoneInformation(&tzi))
+        return tzi.Bias;
     return 0;
 #else
     time_t ti;

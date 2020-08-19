@@ -30,10 +30,13 @@
     <ClCompile Include="quickjs-libc.c">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="Win32Console.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
     <ClCompile Include="qjs.c">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="Win32Console.c">
+    <ClCompile Include="Win32Time.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>

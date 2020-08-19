@@ -146,6 +146,7 @@
     <ClCompile Include="quickjs-libc.c" />
     <ClCompile Include="quickjs.c" />
     <ClCompile Include="Win32Console.c" />
+    <ClCompile Include="Win32Time.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="cutils.h" />
