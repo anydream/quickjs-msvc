@@ -22,6 +22,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
+#include "quickjs-defs.h"
 #include <stdlib.h>
 #include <stdio.h>
 #include <stdarg.h>
@@ -38,14 +39,13 @@
 #include <malloc.h>
 #endif
 
-#include "cutils.h"
-
 #if defined(PLATFORM_IS_WINDOWS)
 # include <windows.h>
 #else
 # include <sys/time.h>
 #endif
 
+#include "cutils.h"
 #include "list.h"
 #include "quickjs.h"
 #include "libregexp.h"
@@ -74,8 +74,8 @@
 
 /* define to include Atomics.* operations which depend on the OS
    threads */
-#if !defined(EMSCRIPTEN)
-//#define CONFIG_ATOMICS
+#if !defined(EMSCRIPTEN) && !defined(_WIN32)
+#define CONFIG_ATOMICS
 #endif
 
 #if !defined(EMSCRIPTEN)
@@ -9007,7 +9007,7 @@ int JS_DefineProperty(JSContext *ctx, JSValueConst this_obj,
                 return -1;
             }
             /* this code relies on the fact that Uint32 are never allocated */
-            val = (JSValueConst)JS_NewUint32(ctx, array_length);
+            val = JS_NewUint32(ctx, array_length);
             /* prs may have been modified */
             prs = find_own_property(&pr, p, prop);
             assert(prs != NULL);

@@ -257,20 +257,6 @@ int unicode_from_utf8(const uint8_t *p, int max_len, const uint8_t **pp)
         return c;
     }
 
-#if 1
-    if (c >= 0xc0 && c <= 0xdf)
-        l = 1;
-    else if (c >= 0xe0 && c <= 0xef)
-        l = 2;
-    else if (c >= 0xf0 && c <= 0xf7)
-        l = 3;
-    else if (c >= 0xf8 && c <= 0xfb)
-        l = 4;
-    else if (c >= 0xfc && c <= 0xfd)
-        l = 5;
-    else
-        return -1;
-#else
     switch(c) {
     case 0xc0: case 0xc1: case 0xc2: case 0xc3:
     case 0xc4: case 0xc5: case 0xc6: case 0xc7:
@@ -301,7 +287,6 @@ int unicode_from_utf8(const uint8_t *p, int max_len, const uint8_t **pp)
     default:
         return -1;
     }
-#endif
 
     /* check that we have enough characters */
     if (l > (max_len - 1))

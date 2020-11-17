@@ -131,7 +131,13 @@ static inline int clz64(uint64_t a)
     return __builtin_clzll(a);
 #else
     unsigned long idx;
+#  if defined(_WIN64)
     _BitScanReverse64(&idx, a);
+#  else
+    if (_BitScanReverse(&idx, (uint32_t)(a >> 32)))
+        return 63 ^ (idx + 32);
+    _BitScanReverse(&idx, (uint32_t)(a));
+#  endif
     return 63 ^ idx;
 #endif
 }
@@ -144,7 +150,7 @@ static inline int ctz32(unsigned int a)
 #else
     unsigned long idx;
     _BitScanForward(&idx, a);
-    return 31 ^ idx;
+    return idx;
 #endif
 }
 
@@ -155,8 +161,15 @@ static inline int ctz64(uint64_t a)
     return __builtin_ctzll(a);
 #else
     unsigned long idx;
+#  if defined(_WIN64)
     _BitScanForward64(&idx, a);
-    return 63 ^ idx;
+    return idx;
+#  else
+    if (_BitScanForward(&idx, (uint32_t)(a)))
+        return idx;
+    _BitScanForward(&idx, (uint32_t)(a >> 32));
+    return idx + 32;
+#  endif
 #endif
 }
 

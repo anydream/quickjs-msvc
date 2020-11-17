@@ -178,13 +178,13 @@ static void dump_hex(FILE *f, const uint8_t *buf, size_t len)
 
 static void dump_bin(const char *path, const uint8_t *buf, size_t len)
 {
-	FILE *fp;
-	char tmp[512];
-	strcpy(tmp, path);
-	strcat(tmp, ".bin");
-	fp = fopen(tmp, "wb");
-	fwrite(buf, len, 1, fp);
-	fclose(fp);
+    FILE *fp;
+    char tmp[512];
+    strcpy(tmp, path);
+    strcat(tmp, ".bin");
+    fp = fopen(tmp, "wb");
+    fwrite(buf, len, 1, fp);
+    fclose(fp);
 }
 
 static void output_object_code(JSContext *ctx,
